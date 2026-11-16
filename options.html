@@ -1,0 +1,203 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Claude Usage Monitor — Settings</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+<div class="layout">
+  <nav>
+    <div class="brand row"><img src="icons/icon48.png" width="28" height="28" alt=""><div><strong>Claude Usage</strong><div class="small muted">Monitor · v1.0</div></div></div>
+    <a href="#setup" data-tab="setup">🚀 Quick setup</a>
+    <a href="#accounts" data-tab="accounts">👤 Accounts</a>
+    <a href="#alerts" data-tab="alerts">🔔 Alerts & thresholds</a>
+    <a href="#sound" data-tab="sound">🔊 Sound & quiet hours</a>
+    <a href="#display" data-tab="display">🎨 Display & badge</a>
+    <a href="#advanced" data-tab="advanced">🛠 Advanced</a>
+    <div class="nav-foot small muted">Settings save automatically.</div>
+  </nav>
+
+  <main>
+    <!-- ───────── SETUP ───────── -->
+    <section id="tab-setup">
+      <h1>Quick setup</h1>
+      <p class="muted">Four steps, about two minutes per account.</p>
+      <ol class="steps">
+        <li>
+          <h3>Allow incognito access (one time)</h3>
+          <p>This lets the extension capture a second account from an incognito window without logging out of your main one.</p>
+          <p>Open <code>chrome://extensions</code> → <b>Claude Usage Monitor</b> → <b>Details</b> → turn on <b>Allow in Incognito</b>.</p>
+          <p id="incogStatus" class="small"></p>
+        </li>
+        <li>
+          <h3>Capture your main account</h3>
+          <p>Sign in to <a href="https://claude.ai" target="_blank">claude.ai</a> in this browser, then click <b>Detect signed-in sessions</b> on the Accounts page and press <b>Add</b>.</p>
+        </li>
+        <li>
+          <h3>Capture each extra account</h3>
+          <p>Open an incognito window (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>N</kbd>), sign in to the next account, come back here and click <b>Detect</b> → <b>Add</b>.</p>
+          <p class="warn">⚠ Then <b>close the incognito window</b> — do <u>not</u> click “Log out” in Claude. Logging out kills the session the extension is using. Close <i>all</i> incognito windows before signing in to the next account (they share one cookie jar).</p>
+          <p class="small muted">Account in another browser or Chrome profile? Open claude.ai there → DevTools (F12) → Application → Cookies → https://claude.ai → copy the <code>sessionKey</code> value and paste it in <b>Add by session key</b>.</p>
+        </li>
+        <li>
+          <h3>Pick your alert levels</h3>
+          <p>Defaults: warning at <b>75%</b>, critical at <b>90%</b>, checks every <b>5 minutes</b>. Change them under <a href="#alerts">Alerts & thresholds</a>, then hit <b>Send test alert</b> to make sure Windows/macOS notifications are allowed for Chrome.</p>
+        </li>
+      </ol>
+      <div class="row"><button class="primary" data-go="accounts">Go to Accounts →</button><button id="setupTest">Send test alert</button></div>
+    </section>
+
+    <!-- ───────── ACCOUNTS ───────── -->
+    <section id="tab-accounts">
+      <h1>Accounts</h1>
+      <div class="panel">
+        <div class="row"><h2>Add an account</h2><span class="spacer"></span></div>
+        <div class="add-grid">
+          <div>
+            <h3>① Detect signed-in sessions</h3>
+            <p class="small muted">Finds Claude sessions in this browser and any open incognito window.</p>
+            <button class="primary" id="detect">Detect signed-in sessions</button>
+            <div id="detectOut"></div>
+          </div>
+          <div>
+            <h3>② Add by session key</h3>
+            <p class="small muted">Paste the <code>sessionKey</code> cookie value (starts with <code>sk-ant-</code>) or a full Cookie header.</p>
+            <textarea id="pasteKey" rows="3" placeholder="sk-ant-sid01-…"></textarea>
+            <div class="row" style="margin-top:6px"><button id="verifyKey">Verify</button></div>
+            <div id="pasteOut"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:22px"><h2>Your accounts</h2><span class="spacer"></span><button id="refreshAll">⟳ Check all now</button></div>
+      <div id="accountList"></div>
+      <p class="small muted">🔒 Session keys are stored only in this browser's local extension storage and are only ever sent to claude.ai. Treat them like passwords.</p>
+    </section>
+
+    <!-- ───────── ALERTS ───────── -->
+    <section id="tab-alerts">
+      <h1>Alerts & thresholds</h1>
+      <div class="panel">
+        <h2>Thresholds</h2>
+        <label class="field"><span>Warning at<small>First heads-up</small></span><input type="number" min="1" max="100" data-setting="warningPct"> %</label>
+        <label class="field"><span>Critical at<small>Urgent alert, stays on screen</small></span><input type="number" min="1" max="100" data-setting="criticalPct"> %</label>
+        <label class="field"><span>Alert when limit is reached (100%)</span><label class="switch"><input type="checkbox" data-setting="notifyAtLimit"><span></span></label></label>
+        <p class="small muted">Each account can override these on the Accounts page.</p>
+      </div>
+      <div class="panel">
+        <h2>Which limits to watch</h2>
+        <label class="field"><span>5-hour session limit</span><label class="switch"><input type="checkbox" data-setting="watch.five_hour"><span></span></label></label>
+        <label class="field"><span>Weekly limit · all models</span><label class="switch"><input type="checkbox" data-setting="watch.seven_day"><span></span></label></label>
+        <label class="field"><span>Weekly limit · Opus</span><label class="switch"><input type="checkbox" data-setting="watch.seven_day_opus"><span></span></label></label>
+        <label class="field"><span>Weekly limit · Sonnet</span><label class="switch"><input type="checkbox" data-setting="watch.seven_day_sonnet"><span></span></label></label>
+        <label class="field"><span>Any other limits Claude reports<small>e.g. new limit types added later</small></span><label class="switch"><input type="checkbox" data-setting="watch.other"><span></span></label></label>
+      </div>
+      <div class="panel">
+        <h2>Notifications</h2>
+        <label class="field"><span>Desktop notifications</span><label class="switch"><input type="checkbox" data-setting="notificationsEnabled"><span></span></label></label>
+        <label class="field"><span>Notify when a limit resets<small>“Account available again”</small></span><label class="switch"><input type="checkbox" data-setting="notifyOnReset"><span></span></label></label>
+        <label class="field"><span>Pace alert<small>Warn when you're on track to hit 100% within this many minutes (0 = off)</small></span><input type="number" min="0" max="600" data-setting="projectionAlertMin"> min</label>
+        <label class="field"><span>Repeat reminders<small>Re-alert while still above a threshold (0 = never)</small></span><input type="number" min="0" max="1440" data-setting="repeatEveryMin"> min</label>
+        <label class="field"><span>Suggest the best alternative account<small>Adds “Switch to X (12% used)” to alerts</small></span><label class="switch"><input type="checkbox" data-setting="suggestAlternative"><span></span></label></label>
+        <label class="field"><span>Keep critical alerts on screen until dismissed</span><label class="switch"><input type="checkbox" data-setting="requireInteractionCritical"><span></span></label></label>
+        <label class="field"><span>Alert on expired sessions & repeated errors</span><label class="switch"><input type="checkbox" data-setting="notifySessionErrors"><span></span></label></label>
+        <div class="row" style="margin-top:10px"><button id="testNotif">Send test alert</button><span id="snoozeInfo" class="small muted"></span></div>
+      </div>
+      <div class="panel">
+        <h2>Checking</h2>
+        <label class="field"><span>Check every<small>1–120 minutes. Lower = faster alerts, more requests</small></span><input type="number" min="1" max="120" data-setting="pollIntervalMin"> min</label>
+        <label class="field"><span>Check immediately when Chrome starts</span><label class="switch"><input type="checkbox" data-setting="refreshOnStartup"><span></span></label></label>
+        <label class="field"><span>Pause all monitoring</span><label class="switch"><input type="checkbox" data-setting="paused"><span></span></label></label>
+      </div>
+    </section>
+
+    <!-- ───────── SOUND ───────── -->
+    <section id="tab-sound">
+      <h1>Sound & quiet hours</h1>
+      <div class="panel">
+        <h2>Sound</h2>
+        <label class="field"><span>Play a sound with alerts</span><label class="switch"><input type="checkbox" data-setting="soundEnabled"><span></span></label></label>
+        <label class="field"><span>Tone</span>
+          <select data-setting="soundTone"><option value="chime">Chime</option><option value="soft">Soft</option><option value="beep">Beep</option><option value="alert">Alert</option></select></label>
+        <label class="field"><span>Volume</span><input type="range" min="0" max="100" data-setting="soundVolume"><span id="volVal" class="small muted"></span></label>
+        <button id="testSound">▶ Play</button>
+      </div>
+      <div class="panel">
+        <h2>Quiet hours</h2>
+        <label class="field"><span>Enable quiet hours</span><label class="switch"><input type="checkbox" data-setting="quietHoursEnabled"><span></span></label></label>
+        <label class="field"><span>From</span><input type="time" data-setting="quietStart"></label>
+        <label class="field"><span>Until</span><input type="time" data-setting="quietEnd"></label>
+        <label class="field"><span>Critical alerts still come through</span><label class="switch"><input type="checkbox" data-setting="criticalBypassQuiet"><span></span></label></label>
+      </div>
+    </section>
+
+    <!-- ───────── DISPLAY ───────── -->
+    <section id="tab-display">
+      <h1>Display & badge</h1>
+      <div class="panel">
+        <h2>Toolbar badge</h2>
+        <label class="field"><span>Badge shows</span>
+          <select data-setting="badgeMode">
+            <option value="max">Highest usage across accounts</option>
+            <option value="best">Lowest usage (best account available)</option>
+            <option value="count">Number of accounts above warning</option>
+            <option value="off">Nothing</option>
+          </select></label>
+        <label class="field"><span>Show “!” when accounts have errors</span><label class="switch"><input type="checkbox" data-setting="badgeShowErrors"><span></span></label></label>
+      </div>
+      <div class="panel">
+        <h2>Popup</h2>
+        <label class="field"><span>Theme</span><select data-setting="theme"><option value="auto">Match system</option><option value="light">Light</option><option value="dark">Dark</option></select></label>
+        <label class="field"><span>Time format</span><select data-setting="timeFormat"><option value="12h">12-hour</option><option value="24h">24-hour</option></select></label>
+        <label class="field"><span>Sort accounts by</span><select data-setting="popupSort"><option value="manual">My order</option><option value="usage">Highest usage first</option><option value="name">Name</option></select></label>
+        <label class="field"><span>Compact layout</span><label class="switch"><input type="checkbox" data-setting="popupCompact"><span></span></label></label>
+        <label class="field"><span>Show “limit in ~X at this pace”</span><label class="switch"><input type="checkbox" data-setting="showProjection"><span></span></label></label>
+        <label class="field"><span>Expand session details by default</span><label class="switch"><input type="checkbox" data-setting="showDetailsByDefault"><span></span></label></label>
+      </div>
+    </section>
+
+    <!-- ───────── ADVANCED ───────── -->
+    <section id="tab-advanced">
+      <h1>Advanced</h1>
+      <div class="panel">
+        <h2>Connection</h2>
+        <label class="field"><span>Request mode<small>Use “Through claude.ai tab” if checks get blocked</small></span>
+          <select data-setting="requestMode"><option value="auto">Automatic (recommended)</option><option value="direct">Direct from extension</option><option value="tab">Through an open claude.ai tab</option></select></label>
+        <label class="field"><span>Usage value scale<small>Only change if bars show ~1% when real usage is high</small></span>
+          <select data-setting="utilizationScale"><option value="percent">Percent (0–100)</option><option value="fraction">Fraction (0–1)</option></select></label>
+      </div>
+      <div class="panel">
+        <h2>Data</h2>
+        <label class="field"><span>Keep history for<small>Used for pace projections</small></span><input type="number" min="2" max="720" data-setting="historyHours"> hours</label>
+        <div class="row wrap">
+          <button id="clearHistory">Clear history</button>
+          <button id="resetAlerts">Reset alert state</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Backup</h2>
+        <label class="row small"><input type="checkbox" id="exportKeys"> Include session keys (anyone with the file can use your accounts)</label>
+        <div class="row wrap" style="margin-top:8px">
+          <button id="exportBtn">Export settings</button>
+          <button id="importBtn">Import…</button><input type="file" id="importFile" accept="application/json" hidden>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Diagnostics</h2>
+        <label class="field"><span>Debug logging<small>Records each check and raw responses</small></span><label class="switch"><input type="checkbox" data-setting="debugLog"><span></span></label></label>
+        <div class="row wrap"><button id="showLog">Show log</button><button id="clearLog">Clear log</button></div>
+        <pre id="logOut" hidden></pre>
+      </div>
+      <div class="panel danger-zone">
+        <h2>Danger zone</h2>
+        <button class="danger" id="resetAll">Remove all accounts & reset settings</button>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+<script type="module" src="options.js"></script>
+</body>
+</html>

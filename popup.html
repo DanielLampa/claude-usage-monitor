@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <div class="row">
+      <img src="icons/icon32.png" width="22" height="22" alt="">
+      <strong>Claude Usage</strong>
+      <span class="spacer"></span>
+      <button class="icon ghost" id="refresh" title="Refresh all accounts">⟳</button>
+      <details class="menu" id="menu">
+        <summary class="icon-btn" title="Snooze / pause">🔔</summary>
+        <div class="menu-body">
+          <button data-snooze="30">Snooze alerts 30 min</button>
+          <button data-snooze="60">Snooze alerts 1 hour</button>
+          <button data-snooze="180">Snooze alerts 3 hours</button>
+          <button data-snooze="tomorrow">Snooze until 8:00 AM</button>
+          <button data-snooze="0">Resume alerts</button>
+          <hr>
+          <button id="pauseToggle">Pause monitoring</button>
+        </div>
+      </details>
+      <button class="icon ghost" id="settings" title="Settings">⚙</button>
+    </div>
+    <div id="banner"></div>
+  </header>
+  <main id="list"></main>
+  <footer class="row small muted">
+    <span id="footLeft"></span><span class="spacer"></span><span id="footRight"></span>
+  </footer>
+  <div class="toast" id="toast"></div>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
